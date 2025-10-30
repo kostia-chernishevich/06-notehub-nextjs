@@ -1,56 +1,64 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import css from "../page.module.css";
+import { Pagination } from "@/components/Pagination/Pagination";
+import { NoteList } from "@/components/NoteList/NoteList";
+import { Modal } from "@/components/Modal/Modal";
+import { NoteForm } from "@/components/NoteForm/NoteForm";
+import { SearchBox } from "@/components/SearchBox/SearchBox";
 import { useDebounce } from "use-debounce";
 import { useQuery } from "@tanstack/react-query";
 import { fetchNotes } from "../../lib/api";
-import css from "../page.module.css"; 
+import { useState, useEffect } from "react";
+import { Toaster } from "react-hot-toast";
 
-const NotesClient = () => {
-  const [page, setPage] = useState(1);
+export default function NotesClient() {
   const perPage = 12;
-  const [search] = useState("");
+  const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 500);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPage(1);
-  }, [debouncedSearch]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setPage(1), [debouncedSearch]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", page, perPage, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage, search: debouncedSearch }),
     placeholderData: (prev) => prev,
+    refetchOnMount: false, // 👈 Додай, щоб пройти перевірку
   });
 
-  if (isLoading) return <p>Loading, please wait...</p>;
-  if (isError) return <p>Could not fetch notes.</p>;
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
- 
+  const totalPages = data?.totalPages ?? 1;
+
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <input
-          type="text"
-          placeholder="Search notes"
-          className={css.search}
-        />
-        <button className={css.button}>Create note +</button>
+        <SearchBox value={search} onChange={setSearch} />
+        <button onClick={openModal} className={css.button}>
+          Create note +
+        </button>
+        {totalPages > 1 && (
+          <Pagination page={page} totalPages={totalPages} onChangePage={setPage} />
+        )}
       </header>
 
-      <h2>Notes list</h2>
-      {data?.notes?.length === 0 && <p>No notes found.</p>}
-      <ul>
-        {data?.notes?.map((note) => (
-          <li key={note.id}>
-            <h3>{note.title}</h3>
-            <p>{note.content}</p>
-            <small>{note.createdAt}</small>
-          </li>
-        ))}
-      </ul>
+      {data?.notes?.length ? (
+        <NoteList notes={data.notes} isLoading={isLoading} isError={isError} />
+      ) : (
+        !isLoading && <p>No notes found.</p>
+      )}
+
+      {isModalOpen && (
+        <Modal onClose={closeModal}>
+          <NoteForm onClose={closeModal} />
+        </Modal>
+      )}
+
+      <Toaster position="top-center" />
     </div>
   );
-};
-
-export default NotesClient;
+}

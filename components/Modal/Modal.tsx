@@ -1,27 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import css from "./Modal.module.css";
 
-export const Modal = ({ onClose, children }: { onClose: () => void; children: React.ReactNode }) => {
-  const [mounted, setMounted] = useState(false);
+interface ModalProps {
+  onClose: () => void;
+  children: React.ReactNode;
+}
 
+export const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
+ 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
 
-  if (!mounted) return null; 
+    window.addEventListener("keydown", handleKeyDown);
 
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = ""; 
+    };
+  }, [onClose]);
+
+  
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+ 
   const modalRoot = document.getElementById("modal-root");
   if (!modalRoot) return null;
 
-  return ReactDOM.createPortal(
-    <div className={css.backdrop} onClick={onClose}>
-      <div className={css.modal} onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
+  return createPortal(
+    <div className={css.backdrop} onClick={handleBackdropClick}>
+      <div className={css.modal}>{children}</div>
     </div>,
     modalRoot
   );
