@@ -10,7 +10,7 @@ const NoteDetailsClient = () => {
   const { data: note, isLoading, isError } = useQuery({
     queryKey: ["note", id],
     queryFn: () => fetchNoteById(id as string),
-    refetchOnMount: false, 
+    refetchOnMount: false,
   });
 
   if (isLoading) return <p>Loading, please wait...</p>;
@@ -23,6 +23,7 @@ const NoteDetailsClient = () => {
           <h2>{note.title}</h2>
         </div>
         <p className={css.content}>{note.content}</p>
+        <p className={css.tag}>Tag: {note.tag}</p>
         <p className={css.date}>
           Created: {new Date(note.createdAt).toLocaleDateString()}
         </p>
