@@ -1,9 +1,11 @@
 import axios from "axios";
-import type { Note } from "@/types/note";
+import type { Note, NoteTag } from "@/types/note"; 
+
 
 const instance = axios.create({
   baseURL: "https://notehub-public.goit.study/api",
 });
+
 
 instance.interceptors.request.use((config) => {
   const token = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
@@ -16,7 +18,7 @@ instance.interceptors.request.use((config) => {
 export interface CreateNotePayload {
   title: string;
   content: string;
-  tag: string;
+  tag: NoteTag; 
 }
 
 

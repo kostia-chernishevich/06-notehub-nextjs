@@ -26,7 +26,7 @@ export default function NotesClient() {
     queryKey: ["notes", page, perPage, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage, search: debouncedSearch }),
     placeholderData: (prev) => prev,
-    refetchOnMount: false, // 👈 Додай, щоб пройти перевірку
+    refetchOnMount: false, 
   });
 
   const openModal = () => setIsModalOpen(true);

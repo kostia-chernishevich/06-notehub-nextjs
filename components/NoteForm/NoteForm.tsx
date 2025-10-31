@@ -20,7 +20,7 @@ interface NoteFormValuesProps {
 const initialValues: NoteFormValuesProps = {
   title: "",
   content: "",
-  tag: "Todo",
+  tag: "work",
 };
 
 const NoteValidationSchema = Yup.object().shape({
@@ -29,8 +29,8 @@ const NoteValidationSchema = Yup.object().shape({
     .max(50, "Title is too long")
     .required("Title is required"),
   content: Yup.string().max(500, "Content is too long"),
-  tag: Yup.string()
-    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"], "Invalid tag")
+  tag: Yup.mixed<NoteTag>()
+    .oneOf(["work", "study", "personal", "other"], "Invalid tag")
     .required("Tag is required"),
 });
 
@@ -39,7 +39,7 @@ export function NoteForm({ onClose }: NoteFormProps) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: createNote,
+    mutationFn: (payload: CreateNotePayload) => createNote(payload),
     onSuccess: () => {
       toast.success("Note created");
       queryClient.invalidateQueries({ queryKey: ["notes"] });
@@ -55,59 +55,39 @@ export function NoteForm({ onClose }: NoteFormProps) {
       initialValues={initialValues}
       validationSchema={NoteValidationSchema}
       onSubmit={(values, actions) => {
-        mutation.mutate(values as CreateNotePayload);
+        mutation.mutate(values);
         actions.resetForm();
       }}
     >
       <Form className={css.form}>
-        {/* Title */}
         <div className={css.formGroup}>
           <label htmlFor={`${fieldId}-title`}>Title</label>
-          <Field
-            id={`${fieldId}-title`}
-            type="text"
-            name="title"
-            className={css.input}
-          />
+          <Field id={`${fieldId}-title`} type="text" name="title" className={css.input} />
           <ErrorMessage name="title" component="span" className={css.error} />
         </div>
 
-        {/* Content */}
         <div className={css.formGroup}>
           <label htmlFor={`${fieldId}-content`}>Content</label>
-          <Field
-            as="textarea"
-            id={`${fieldId}-content`}
-            name="content"
-            rows={8}
-            className={css.textarea}
-          />
+          <Field as="textarea" id={`${fieldId}-content`} name="content" rows={8} className={css.textarea} />
           <ErrorMessage name="content" component="span" className={css.error} />
         </div>
 
-        {/* Tag */}
         <div className={css.formGroup}>
           <label htmlFor={`${fieldId}-tag`}>Tag</label>
           <Field as="select" id={`${fieldId}-tag`} name="tag" className={css.select}>
-            <option value="Todo">Todo</option>
-            <option value="Work">Work</option>
-            <option value="Personal">Personal</option>
-            <option value="Meeting">Meeting</option>
-            <option value="Shopping">Shopping</option>
+            <option value="work">Work</option>
+            <option value="study">Study</option>
+            <option value="personal">Personal</option>
+            <option value="other">Other</option>
           </Field>
           <ErrorMessage name="tag" component="span" className={css.error} />
         </div>
 
-        {/* Buttons */}
         <div className={css.actions}>
           <button onClick={onClose} type="button" className={css.cancelButton}>
             Cancel
           </button>
-          <button
-            type="submit"
-            className={css.submitButton}
-            disabled={mutation.isPending}
-          >
+          <button type="submit" className={css.submitButton} disabled={mutation.isPending}>
             {mutation.isPending ? "Creating..." : "Create note"}
           </button>
         </div>
